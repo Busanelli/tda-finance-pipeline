@@ -1,0 +1,63 @@
+project:
+  name: tcc_topologia_financeira
+
+data:
+  assets:
+    - PETR4.SA
+    - VALE3.SA
+    - ITUB4.SA
+    - ABEV3.SA
+    - WEGE3.SA
+    - LREN3.SA
+
+  start_date: "2010-01-01"
+  end_date: "2025-12-31"
+  price_column: "Adj Close"
+  auto_adjust: false
+
+windowing:
+  window_size: 60
+  step_size: 5
+
+parameters:
+  tau:
+    method: "ami_acf"
+    scope: "per_asset"
+    max_lag: 30
+    final_rule: "ami_first_local_minimum"
+
+  embedding_dimension:
+    method: "fnn"
+    scope: "per_asset"
+    min_dimension: 2
+    max_dimension: 10
+    threshold: 0.01
+    
+topology:
+  homology_dimension: 1
+  backend: "giotto-tda"
+  n_jobs: -1
+
+surrogates:
+  n_surrogates: 1000
+  random_seed: 42
+
+envelope:
+  lower_quantile: 0.025
+  upper_quantile: 0.975
+
+paths:
+  raw: "data/raw"
+  processed: "data/processed"
+  windows: "data/windows"
+  topology: "data/topology"
+  surrogates: "data/surrogates"
+
+  figures: "figures"
+  figures_topology: "figures/topology"
+  figures_envelope: "figures/envelope"
+  figures_final: "figures/final"
+
+  tables: "tables"
+  tables_intermediate: "tables/intermediate"
+  tables_final: "tables/final"

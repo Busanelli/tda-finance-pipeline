@@ -1,0 +1,7 @@
+asset,window_id,reference_date,tau,embedding_dimension,output_path
+ABEV3.SA,188,1970-01-01 00:00:00.000000999,3,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_ABEV3_SA.png
+ITUB4.SA,778,1970-01-01 00:00:00.000003949,2,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_ITUB4_SA.png
+LREN3.SA,420,1970-01-01 00:00:00.000002159,2,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_LREN3_SA.png
+PETR4.SA,372,1970-01-01 00:00:00.000001919,3,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_PETR4_SA.png
+VALE3.SA,37,1970-01-01 00:00:00.000000244,5,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_VALE3_SA.png
+WEGE3.SA,181,1970-01-01 00:00:00.000000964,2,5,/home/gustavobusanelli/Documentos/git_projetos/TDA_tcc/tda-finance-pipeline/outputs/figures/persistence_diagrams/persistence_diagram_WEGE3_SA.png
