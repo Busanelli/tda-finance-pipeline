@@ -39,7 +39,7 @@ def main():
     validate_log_returns(log_returns)
 
     log_message(f"Salvando retornos em Parquet: {parquet_output_path}")
-    save_dataframe(log_returns, parquet_output_path)
+    save_dataframe(log_returns, parquet_output_path, include_index=True)
 
     log_message(f"Salvando retornos em CSV: {csv_output_path}")
     save_dataframe(log_returns, csv_output_path)

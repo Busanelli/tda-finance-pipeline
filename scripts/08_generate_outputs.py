@@ -41,7 +41,7 @@ def create_output_dirs(project_root, config):
         "figures": outputs_root / "figures",
         "figures_tp_h1_envelope": outputs_root / "figures" / "tp_h1_vs_envelope",
         "figures_tp_h1_volatility": outputs_root / "figures" / "tp_h1_vs_volatility",
-        "figures_persistence_diagrams": outputs_root / "figures" / "persistence_diagrams",
+        "figures_persistence": outputs_root / "figures" / "persistence",
     }
 
     for path in output_paths.values():
@@ -105,6 +105,7 @@ def load_required_inputs(config):
     comparison_path = topology_path / "tp_h1_real_vs_envelope.parquet"
     log_returns_path = processed_path / "log_returns.parquet"
     windows_input_path = windows_path / "windows_normalized.parquet"
+    windows_metadata_path = tables_intermediate_path / "windows_metadata.parquet"
     parameters_input_path = tables_intermediate_path / "embedding_parameters.parquet"
 
     log_message(f"Carregando topologia real de: {real_topology_path}")
@@ -121,6 +122,9 @@ def load_required_inputs(config):
     log_message(f"Carregando janelas normalizadas de: {windows_input_path}")
     windows_df = load_dataframe(windows_input_path)
 
+    log_message(f"Carregando metadados das janelas de: {windows_metadata_path}")
+    windows_metadata_df = load_dataframe(windows_metadata_path)
+
     log_message(f"Carregando parâmetros de embedding de: {parameters_input_path}")
     parameters_df = load_dataframe(parameters_input_path)
 
@@ -129,6 +133,7 @@ def load_required_inputs(config):
         "comparison_df": comparison_df,
         "log_returns": log_returns,
         "windows_df": windows_df,
+        "windows_metadata_df": windows_metadata_df,
         "parameters_df": parameters_df,
     }
 
@@ -555,6 +560,7 @@ def main():
     log_returns = inputs["log_returns"]
     windows_df = inputs["windows_df"]
     parameters_df = inputs["parameters_df"]
+    windows_metadata_df = inputs["windows_metadata_df"]
 
     window_size = config["windowing"]["window_size"]
     step_size = config["windowing"]["step_size"]
@@ -657,11 +663,13 @@ def main():
     )
 
     log_message("Gerando diagramas de persistência representativos por ativo")
+    
     diagram_records_df = generate_persistence_diagrams_for_all_assets(
         final_results_df=final_results_df,
         windows_df=windows_df,
+        windows_metadata_df=windows_metadata_df,
         parameters_df=parameters_df,
-        output_dir=output_paths["figures_persistence_diagrams"],
+        output_dir=output_paths["figures_persistence"],
         homology_dimension=homology_dimension,
         n_jobs=n_jobs,
     )

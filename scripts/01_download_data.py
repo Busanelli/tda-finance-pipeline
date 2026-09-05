@@ -32,10 +32,10 @@ def main():
     log_message(f"Base baixada com shape: {prices.shape}")
 
     log_message(f"Salvando arquivo Parquet em: {parquet_path}")
-    save_dataframe(prices, parquet_path)
+    save_dataframe(prices, parquet_path, include_index=True)
 
     log_message(f"Salvando arquivo CSV em: {csv_path}")
-    save_dataframe(prices, csv_path)
+    save_dataframe(prices, csv_path, include_index=True)
 
     log_message("Etapa 01 concluída com sucesso")
 

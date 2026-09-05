@@ -145,18 +145,90 @@ def plot_persistence_diagram(diagram, output_path, title=None):
 
     plt.close(fig)
 
+def get_reference_date(windows_metadata_df, asset, window_id):
+    """
+    Recupera a data de referência de uma janela real.
+    """
+    row = windows_metadata_df[
+        (windows_metadata_df["asset"] == asset)
+        & (windows_metadata_df["window_id"] == window_id)
+    ]
+
+    if row.empty:
+        raise ValueError(
+            f"Data de referência não encontrada para asset={asset}, window_id={window_id}."
+        )
+
+    if len(row) > 1:
+        raise ValueError(
+            f"Mais de uma data encontrada para asset={asset}, window_id={window_id}."
+        )
+
+    return pd.to_datetime(row.iloc[0]["reference_date"])    
+
+def plot_h1_barcode(diagram, output_path, title=None, max_bars=80):
+    """
+    Gera e salva um barcode de persistência apenas para H1.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    diagram = np.asarray(diagram, dtype=float)
+
+    h1 = diagram[diagram[:, 2] == 1]
+
+    finite_mask = np.isfinite(h1[:, 0]) & np.isfinite(h1[:, 1])
+    positive_mask = h1[:, 1] > h1[:, 0]
+    h1 = h1[finite_mask & positive_mask]
+
+    if len(h1) == 0:
+        raise ValueError("Nenhuma barra H1 válida encontrada.")
+
+    h1 = pd.DataFrame(h1, columns=["birth", "death", "dimension"])
+    h1["persistence"] = h1["death"] - h1["birth"]
+
+    h1 = (
+        h1
+        .sort_values("persistence", ascending=False)
+        .head(max_bars)
+        .sort_values("birth")
+        .reset_index(drop=True)
+    )
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+    for idx, row in h1.iterrows():
+        ax.hlines(
+            y=idx,
+            xmin=row["birth"],
+            xmax=row["death"],
+            linewidth=1.8,
+        )
+
+    ax.set_title(title or "Barcode de persistência em H1")
+    ax.set_xlabel("Escala")
+    ax.set_ylabel("Características H1")
+    ax.grid(axis="x", alpha=0.3)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    fig.savefig(output_path.with_suffix(".pdf"), bbox_inches="tight")
+
+    plt.close(fig)
+
 
 def generate_persistence_diagram_for_asset(
     asset,
     final_results_df,
     windows_df,
+    windows_metadata_df,
     parameters_df,
     output_dir,
     homology_dimension=1,
     n_jobs=-1,
 ):
     """
-    Gera o diagrama de persistência da janela de maior TP_H1 real de um ativo.
+    Gera o diagrama de persistência e o barcode H1 da janela de maior TP_H1 real.
     """
     selected_window = select_max_tp_h1_window(
         final_results_df=final_results_df,
@@ -164,7 +236,12 @@ def generate_persistence_diagram_for_asset(
     )
 
     window_id = int(selected_window["window_id"])
-    reference_date = pd.to_datetime(selected_window["reference_date"])
+
+    reference_date = get_reference_date(
+        windows_metadata_df=windows_metadata_df,
+        asset=asset,
+        window_id=window_id,
+    )
 
     values = get_window_values(
         windows_df=windows_df,
@@ -190,19 +267,32 @@ def generate_persistence_diagram_for_asset(
     )
 
     diagram = diagrams[0]
-
     safe_asset = sanitize_asset_name(asset)
-    output_path = Path(output_dir) / f"persistence_diagram_{safe_asset}.png"
 
-    title = (
+    diagram_output_path = Path(output_dir) / f"persistence_diagram_{safe_asset}.png"
+    barcode_output_path = Path(output_dir) / f"persistence_barcode_h1_{safe_asset}.png"
+
+    diagram_title = (
         f"Diagrama de persistência — {asset}\n"
+        f"janela {window_id} | referência {reference_date.date()}"
+    )
+
+    barcode_title = (
+        f"Barcode de persistência em H1 — {asset}\n"
         f"janela {window_id} | referência {reference_date.date()}"
     )
 
     plot_persistence_diagram(
         diagram=diagram,
-        output_path=output_path,
-        title=title,
+        output_path=diagram_output_path,
+        title=diagram_title,
+    )
+
+    plot_h1_barcode(
+        diagram=diagram,
+        output_path=barcode_output_path,
+        title=barcode_title,
+        max_bars=80,
     )
 
     return {
@@ -211,13 +301,15 @@ def generate_persistence_diagram_for_asset(
         "reference_date": reference_date,
         "tau": tau,
         "embedding_dimension": dimension,
-        "output_path": output_path,
+        "diagram_output_path": str(diagram_output_path),
+        "barcode_output_path": str(barcode_output_path),
     }
 
 
 def generate_persistence_diagrams_for_all_assets(
     final_results_df,
     windows_df,
+    windows_metadata_df,
     parameters_df,
     output_dir,
     homology_dimension=1,
@@ -238,6 +330,7 @@ def generate_persistence_diagrams_for_all_assets(
             asset=asset,
             final_results_df=final_results_df,
             windows_df=windows_df,
+            windows_metadata_df=windows_metadata_df,
             parameters_df=parameters_df,
             output_dir=output_dir,
             homology_dimension=homology_dimension,
@@ -247,3 +340,4 @@ def generate_persistence_diagrams_for_all_assets(
         records.append(record)
 
     return pd.DataFrame(records)
+
